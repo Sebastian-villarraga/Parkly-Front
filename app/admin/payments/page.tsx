@@ -1,0 +1,36 @@
+"use client"
+
+import * as React from "react"
+import { CheckCircle2, CreditCard, Plus } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { PageHeader } from "@/components/parkly/page-header"
+import { EmptyState } from "@/components/parkly/empty-state"
+import { StatusBadge } from "@/components/parkly/status-badge"
+import { chargesService, paymentsService, residentsService } from "@/lib/api/services"
+import { formatCOP } from "@/lib/format"
+import type { Charge, Payment, Resident } from "@/lib/api/types"
+
+interface ChargeForm { residentId: string; concept: string; amount: string; dueDate: string }
+const emptyForm: ChargeForm = { residentId: "", concept: "", amount: "", dueDate: "" }
+
+export default function PaymentsPage() {
+  const [charges, setCharges] = React.useState<Charge[]>([])
+  const [payments, setPayments] = React.useState<Payment[]>([])
+  const [residents, setResidents] = React.useState<Resident[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
+  const [form, setForm] = React.useState<ChargeForm>(emptyForm)
+  const load = React.useCallback(async () => { setLoading(true); try { const [chargeList, paymentList, residentList] = await Promise.all([chargesService.list(), paymentsService.list(), residentsService.list()]); setCharges(chargeList); setPayments(paymentList); setResidents(residentList.filter((resident) => resident.status === "ACTIVE")) } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudieron cargar los pagos") } finally { setLoading(false) } }, [])
+  React.useEffect(() => { void load() }, [load])
+  const setField = (field: keyof ChargeForm, value: string) => setForm((current) => ({ ...current, [field]: value }))
+  const residentName = (resident: Resident | undefined, id: string) => resident?.user ? `${resident.user.firstName} ${resident.user.lastName}` : id
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) { event.preventDefault(); setSaving(true); try { await chargesService.create({ ...form, amount: Number(form.amount) }); toast.success("Cobro creado"); setOpen(false); await load() } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo crear el cobro") } finally { setSaving(false) } }
+  async function confirm(payment: Payment) { if (!window.confirm("¿Confirmar este pago?")) return; try { await paymentsService.confirm(payment.id); toast.success("Pago confirmado"); await load() } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo confirmar el pago") } }
+  return <div className="flex flex-col gap-6"><PageHeader title="Pagos y cobros" description="Crea cobros y confirma los pagos recibidos."><Button onClick={() => { setForm(emptyForm); setOpen(true) }}><Plus data-icon="inline-start" />Nuevo cobro</Button></PageHeader><div className="grid gap-4 lg:grid-cols-2"><Card><CardHeader><CardTitle>{loading ? "Cargando..." : `${charges.length} cobros`}</CardTitle></CardHeader><CardContent>{!loading && charges.length === 0 ? <EmptyState icon={CreditCard} title="Sin cobros" /> : <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b text-left text-muted-foreground"><th className="px-2 py-2 font-medium">Residente</th><th className="px-2 py-2 font-medium">Concepto</th><th className="px-2 py-2 font-medium">Valor</th><th className="px-2 py-2 font-medium">Estado</th></tr></thead><tbody>{charges.map((charge) => <tr key={charge.id} className="border-b last:border-0"><td className="px-2 py-2">{residentName(charge.resident, charge.residentId)}</td><td className="px-2 py-2">{charge.concept}</td><td className="px-2 py-2">{formatCOP(Number(charge.amount))}</td><td className="px-2 py-2"><StatusBadge status={charge.status.toLowerCase()} /></td></tr>)}</tbody></table></div>}</CardContent></Card><Card><CardHeader><CardTitle>{loading ? "Cargando..." : `${payments.length} pagos`}</CardTitle></CardHeader><CardContent>{!loading && payments.length === 0 ? <EmptyState icon={CreditCard} title="Sin pagos" /> : <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b text-left text-muted-foreground"><th className="px-2 py-2 font-medium">Residente</th><th className="px-2 py-2 font-medium">Valor</th><th className="px-2 py-2 font-medium">Método</th><th className="px-2 py-2 font-medium">Estado</th><th className="px-2 py-2 text-right font-medium">Acción</th></tr></thead><tbody>{payments.map((payment) => <tr key={payment.id} className="border-b last:border-0"><td className="px-2 py-2">{residentName(payment.resident, payment.residentId)}</td><td className="px-2 py-2">{formatCOP(Number(payment.amount))}</td><td className="px-2 py-2">{payment.method}</td><td className="px-2 py-2"><StatusBadge status={payment.status.toLowerCase()} /></td><td className="px-2 py-2 text-right">{payment.status === "PENDING" && <Button variant="ghost" size="icon" onClick={() => void confirm(payment)} aria-label="Confirmar pago"><CheckCircle2 /></Button>}</td></tr>)}</tbody></table></div>}</CardContent></Card></div><Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>Nuevo cobro</DialogTitle><DialogDescription>Registra un cobro pendiente para un residente.</DialogDescription></DialogHeader><form onSubmit={(event) => void submit(event)} className="grid gap-4"><div className="grid gap-2"><Label htmlFor="residentId">Residente</Label><select id="residentId" className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm" value={form.residentId} onChange={(event) => setField("residentId", event.target.value)} required><option value="">Selecciona un residente</option>{residents.map((resident) => <option key={resident.id} value={resident.id}>{resident.user ? `${resident.user.firstName} ${resident.user.lastName}` : resident.userId}</option>)}</select></div><div className="grid gap-2"><Label htmlFor="concept">Concepto</Label><Input id="concept" value={form.concept} onChange={(event) => setField("concept", event.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="amount">Valor</Label><Input id="amount" type="number" min="1" value={form.amount} onChange={(event) => setField("amount", event.target.value)} required /></div><div className="grid gap-2"><Label htmlFor="dueDate">Fecha de vencimiento</Label><input id="dueDate" type="date" className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm" value={form.dueDate} onChange={(event) => setField("dueDate", event.target.value)} required /></div><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={saving}>{saving ? "Guardando..." : "Crear cobro"}</Button></DialogFooter></form></DialogContent></Dialog></div>
+}

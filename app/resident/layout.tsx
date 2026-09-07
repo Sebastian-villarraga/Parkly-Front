@@ -1,12 +1,10 @@
 import { AppShell } from "@/components/parkly/app-shell"
 import { RoleGuard } from "@/components/parkly/role-guard"
-import { DEFAULT_COMPLEX_ID, getDataset } from "@/lib/mock-data"
 
-export default function ResidentLayout({ children }: { children: React.ReactNode }) {
-  const { notifications } = getDataset(DEFAULT_COMPLEX_ID)
+export default function ResidentLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <RoleGuard role="resident">
-      <AppShell role="resident" notifications={notifications}>
+      <AppShell role="resident">
         {children}
       </AppShell>
     </RoleGuard>

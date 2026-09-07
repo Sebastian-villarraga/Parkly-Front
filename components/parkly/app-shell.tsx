@@ -146,12 +146,14 @@ export function AppShell({
                   }
                 />
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{session.name}</span>
-                      <span className="text-xs font-normal text-muted-foreground">{session.email}</span>
-                    </div>
-                  </DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{session.name}</span>
+                        <span className="text-xs font-normal text-muted-foreground">{session.email}</span>
+                      </div>
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem variant="destructive" onClick={logout}>

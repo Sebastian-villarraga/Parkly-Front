@@ -19,6 +19,7 @@ import type {
   Subscription,
   Vehicle,
   VehicleType,
+  Visitor,
 } from "./types"
 
 // Deterministic PRNG so mock data is identical on server and client (no hydration drift).
