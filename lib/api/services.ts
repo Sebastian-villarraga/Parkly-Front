@@ -1,5 +1,5 @@
 import { api, clearTokens, storeTokens } from "./client"
-import type { AuthResponse, User, Complex, Plan, Subscription, Apartment, Resident, Vehicle, ParkingSpace, ParkingAssignment, ParkingDraw, Reservation, VisitorAuthorization, AccessEvent, Fine, Charge, Payment, AuditLog } from "./types"
+import type { AuthResponse, User, SecurityUser, Complex, Plan, Subscription, Apartment, Resident, Vehicle, ParkingSpace, ParkingAssignment, ParkingDraw, Reservation, VisitorAuthorization, AccessEvent, Fine, Charge, Payment, AuditLog, RoleDashboardConfig } from "./types"
 
 export const authService = {
   login: async (email: string, password: string) => {
@@ -39,4 +39,6 @@ export const finesService = crud<Fine>("fines")
 export const chargesService = crud<Charge>("charges")
 export const paymentsService = { ...crud<Payment>("payments"), confirm: (id: string) => api.post<Payment>(`/payments/${id}/confirm`) }
 export const auditService = { list: () => api.get<AuditLog[]>("/audit"), platform: () => api.get<AuditLog[]>("/audit/platform"), logs: () => api.get<AuditLog[]>("/audit/logs") }
+export const securityUsersService = { list: () => api.get<SecurityUser[]>("/users/security"), create: (body: unknown) => api.post<SecurityUser>("/users/security", body) }
+export const settingsService = { getDashboard: () => api.get<RoleDashboardConfig>("/settings/dashboard"), updateDashboard: (body: RoleDashboardConfig) => api.patch<RoleDashboardConfig>("/settings/dashboard", body) }
 export const reportsService = { parkingOccupancy: () => api.get<unknown>("/reports/parking-occupancy"), access: () => api.get<unknown>("/reports/access"), fines: () => api.get<unknown>("/reports/fines"), payments: () => api.get<unknown>("/reports/payments"), reservations: () => api.get<unknown>("/reports/reservations"), assignments: () => api.get<unknown>("/reports/assignments") }

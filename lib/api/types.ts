@@ -27,6 +27,7 @@ export interface User {
   createdAt?: string
   updatedAt?: string
 }
+export interface SecurityUser { id: string; email: string; firstName: string; lastName: string; phone: string | null; status: UserStatus; createdAt: string }
 
 export interface Complex { id: string; name: string; address: string; city: string; phone: string | null; email: string | null; numberOfApartments: number; status: ComplexStatus; createdAt: string; updatedAt: string }
 export interface Apartment { id: string; complexId: string; tower: string | null; number: string; floor: string | null; status: "ACTIVE" | "INACTIVE"; createdAt: string; updatedAt: string }
@@ -45,4 +46,5 @@ export interface Plan { id: string; name: string; monthlyPrice: string | number;
 export interface Subscription { id: string; complexId: string; planId: string; status: SubscriptionStatus; startDate: string; endDate: string | null; minimumCommitmentMonths: number; nextBillingDate: string; createdAt: string; updatedAt: string }
 export interface Notification { id: string; userId: string; complexId: string | null; title: string; message: string; type: "PARKING" | "VISITOR" | "PAYMENT" | "FINE" | "DRAW" | "SYSTEM"; read: boolean; createdAt: string }
 export interface AuditLog { id: string; complexId: string | null; userId: string | null; action: string; entity: string; entityId: string | null; oldValue: unknown; newValue: unknown; ipAddress: string | null; userAgent: string | null; createdAt: string }
+export interface RoleDashboardConfig { title: string; description: string; imageUrl: string; showMetrics: boolean; showActivity: boolean; showQuickLinks: boolean }
 export interface AuthResponse { accessToken: string; refreshToken: string; user: User; role: BackendRole; complexId: string | null }

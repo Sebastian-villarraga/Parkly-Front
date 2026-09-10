@@ -1,2 +1,2 @@
-import { ResourcePage } from "@/components/parkly/resource-page"
-export default function SecurityDashboard() { return <ResourcePage resource="access" /> }
+import { RoleDashboard } from "@/components/parkly/role-dashboard"
+export default function SecurityDashboard() { return <RoleDashboard role="security" /> }
